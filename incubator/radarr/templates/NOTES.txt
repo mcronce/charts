@@ -1,0 +1,5 @@
+Radarr has been installed. You can access the server from within the k8s cluster using:
+
+  {{ template "radarr.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.httpPort }}
+
+

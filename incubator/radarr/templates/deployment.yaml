@@ -1,0 +1,81 @@
+{{ if or (not .Values.persistence.movies) (not .Values.persistence.downloads) }}
+{{ fail "persistence.movies and persistence.downloads must be set" }}
+{{- end -}}
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name:  {{ template "radarr.fullname" . }}
+  labels:
+    app: {{ template "radarr.name" . }}
+    chart: {{ template "radarr.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    {{- if .Values.extraLabels }}
+    {{- toYaml .Values.extraLabels | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "radarr.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "radarr.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: radarr
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PUID
+              value: {{ .Values.settings.uid | quote }}
+            - name: PGID
+              value: {{ .Values.settings.gid | quote }}
+          ports:
+            - name: http
+              containerPort: 7878
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: movies
+              mountPath: /movies
+            - name: downloads
+              mountPath: /downloads
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 2
+            failureThreshold: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      volumes:
+        - name: config
+          {{- if .Values.persistence.config.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.config.existingClaim | default (printf "%s-%s" (include "radarr.fullname" .) "config") }}
+        {{- else }}
+            emptyDir: {}
+        {{- end }}
+        - name: movies
+          {{ .Values.persistence.movies | toYaml | nindent 10 }}
+        - name: downloads
+          {{ .Values.persistence.downloads | toYaml | nindent 10 }}
+
