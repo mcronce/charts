@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "matrix-appservice-discord.fullname" . }}
+  labels:
+    {{- include "matrix-appservice-discord.labels" . | nindent 4 }}
+type: Opaque
+data:
+  config.yaml: |
+    bridge:
+      domain: {{ .Values.settings.homeserver.domain | quote }}
+      homeserverUrl: {{ .Values.settings.homeserver.url | quote }}
+      {{- toYaml .Values.settings.bridge | nindent 6 }}
+    auth:
+      clientID: {{ .Values.settings.discord.client_id | quote }}
+      botToken: {{ .Values.settings.discord.bot_token | quote }}
+    logging:
+      console: "warn" #silly, verbose, info, http, warn, error, silent
+      lineDateFormat: "MMM-D HH:mm:ss.SSS" # This is in moment.js format
+      files:
+        - file: "/data/debug.log"
+          disable:
+            - "PresenceHandler" # Will not capture presence logging
+        - file: "/data/warn.log" # Will capture warnings
+          level: "warn"
+        - file: "/data/botlogs.log" # Will capture logs from DiscordBot
+          level: "info"
+          enable:
+            - "DiscordBot"
+    database:
+      userStorePath: "/data/user-store.db"
+      roomStorePath: "/data/room-store.db"
+      # You may either use SQLite or Postgresql for the bridge database, which contains
+      # important mappings for events and user puppeting configurations.
+      # Use the filename option for SQLite, or connString for Postgresql.
+      # If you are migrating, see https://github.com/Half-Shot/matrix-appservice-discord/blob/master/docs/howto.md#migrate-to-postgres-from-sqlite
+      # WARNING: You will almost certainly be fine with sqlite unless your bridge
+      # is in heavy demand and you suffer from IO slowness.
+      filename: "/data/discord.db"
+      # connString: "postgresql://user:password@localhost/database_name"
+    room:
+      defaultVisibility: "public"
+    channel:
+        namePattern: "[Discord] :guild :name"
+        deleteOptions:
+           disableMessaging: false
+           unsetRoomAlias: true
+           unlistFromDirectory: true
+           setInviteOnly: true
+           ghostsLeave: true
+    limits:
+        roomGhostJoinDelay: 6000
+        # Delay in milliseconds before sending messages to discord to avoid echos.
+        # (Copies of a sent message may arrive from discord before we've
+        # fininished handling it, causing us to echo it back to the room)
+        discordSendDelay: 750
+

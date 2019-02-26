@@ -1,0 +1,66 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name:  {{ template "matrix-appservice-discord.fullname" . }}
+  labels:
+    {{- include "matrix-appservice-discord.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ template "matrix-appservice-discord.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "matrix-appservice-discord.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "matrix-appservice-discord.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: configmap-copy
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-exc", "cp -vf /configmap/* /data/"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: configmap
+              mountPath: /configmap
+        - name: registration-generator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "if [ ! -f '/data/discord-registration.yaml' ]; then node /build/src/discordas.js -r -u \"{{ template "matrix-appservice-discord.url" . }}\" -c /data/config.yaml -f /data/discord-registration.yaml; fi"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: configmap
+              mountPath: /configmap
+      containers:
+        - name: matrix-appservice-discord
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 9005
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.data.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.data.existingClaim | default (printf "%s-%s" (include "matrix-appservice-discord.fullname" .) "data") }}
+          {{- else }}
+            emptyDir: {}
+          {{- end }}
+        - name: configmap
+          configMap:
+            name: {{ template "matrix-appservice-discord.fullname" . }}
+

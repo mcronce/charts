@@ -1,0 +1,15 @@
+apiVersion: v1
+appVersion: 0.1
+description: A bridge between Matrix and Discord.
+name: matrix-appservice-discord
+version: 0.0.1
+keywords:
+  - matrix
+  - discord
+home: https://github.com/Half-Shot/matrix-appservice-discord
+sources:
+  - https://github.com/Half-Shot/matrix-appservice-discord
+  - https://github.com/helm/charts/tree/master/incubator/matrix-appservice-discord
+maintainers:
+  - name: mcronce
+    email: mike@quadra-tec.net
