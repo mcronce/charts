@@ -1,0 +1,15 @@
+apiVersion: v1
+appVersion: 0.1
+description: Slack-compatible webhooks for Matrix
+name: matrix-appservice-webhooks
+version: 0.0.1
+keywords:
+  - matrix
+  - webhooks
+home: https://github.com/turt2live/matrix-appservice-webhooks
+sources:
+  - https://github.com/turt2live/matrix-appservice-webhooks
+  - https://github.com/helm/charts/tree/master/incubator/matrix-appservice-webhooks
+maintainers:
+  - name: mcronce
+    email: mike@quadra-tec.net

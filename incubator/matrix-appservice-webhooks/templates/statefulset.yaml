@@ -1,0 +1,66 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name:  {{ template "matrix-appservice-webhooks.fullname" . }}
+  labels:
+    {{- include "matrix-appservice-webhooks.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ template "matrix-appservice-webhooks.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "matrix-appservice-webhooks.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "matrix-appservice-webhooks.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: configmap-copy
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-exc", "cp -vf /configmap/* /data/"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: configmap
+              mountPath: /configmap
+        - name: registration-generator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "if [ ! -f '/data/appservice-registration-webhooks.yaml' ]; then cd /data; node /index.js -r -u \"{{ template "matrix-appservice-webhooks.url" . }}\" -c /data/config.yaml; fi"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: configmap
+              mountPath: /configmap
+      containers:
+        - name: matrix-appservice-webhooks
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.data.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.data.existingClaim | default (printf "%s-%s" (include "matrix-appservice-webhooks.fullname" .) "data") }}
+          {{- else }}
+            emptyDir: {}
+          {{- end }}
+        - name: configmap
+          configMap:
+            name: {{ template "matrix-appservice-webhooks.fullname" . }}
+

@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "matrix-appservice-webhooks.fullname" . }}
+  labels:
+    {{- include "matrix-appservice-webhooks.labels" . | nindent 4 }}
+type: Opaque
+data:
+  database.json: |
+    {
+      "defaultEnv": {
+        "ENV": "NODE_ENV"
+      },
+      "development": {
+        "driver": "sqlite3",
+        "filename": "/data/development.db"
+      },
+      "production": {
+        "driver": "sqlite3",
+        "filename": "/data/production.db"
+      }
+    }
+  config.yaml: |
+    homeserver:
+      url: {{ .Values.settings.homeserver.url | quote }}
+      domain: {{ .Values.settings.homeserver.domain | quote }}
+    webhookBot:
+      localpart: {{ .Values.settings.bot.localpart | default "_webhook" | quote }}
+      appearance:
+        displayName: {{ .Values.settings.bot.display_name | default "Webhook Bridge" | quote }}
+        avatarUrl: {{ .Values.settings.bot.avatar_url | default "http://i.imgur.com/IDOBtEJ.png" | quote }} # webhook icon
+    provisioning:
+      secret: '{{ .Values.settings.provisioning_secret | default (randAlphaNum 48) }}'
+    web:
+      hookUrlBase: '{{ template "matrix-appservice-webhooks.url" . }}/'
+    logging:
+      file: /data/webhook.log
+      console: true
+      consoleLevel: info
+      fileLevel: verbose
+      writeFiles: true
+      rotate:
+        size: 52428800 # bytes, default is 50mb
+        count: 5  
+  

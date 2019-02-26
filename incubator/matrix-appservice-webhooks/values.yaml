@@ -1,0 +1,89 @@
+# Default values for matrix-appservice-webhooks.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # From repository https://github.com/turt2live/matrix-appservice-webhooks
+  repository: turt2live/matrix-appservice-webhooks
+  # TODO:  When version tagged images are available, change tag to one of them and pullPolicy to IfNotPresent
+  tag: latest
+  pullPolicy: Always
+
+## Add additional labels to all resources
+extraLabels: {}
+
+settings:
+  url_override:
+  homeserver:
+    domain:
+    url:
+  provisioning_secret:
+  bot:
+    localpart: _webhook
+    display_name: "Webhook Bridge"
+    avatar_url: "http://i.imgur.com/IDOBtEJ.png"
+
+matrix_secret:
+  name_override:
+  deploy:
+    enabled: false
+    username:
+    password:
+
+service:
+  annotations: {}
+  # Default to headless; if your Matrix server is running in the same cluster, the Kubernetes firewall adds an additional layer of security
+  # If your Matrix server is _not_ running in the same cluster, set this to an IP address or simply an empty string
+  clusterIP: "None"
+
+  port: "9000"
+  ## List of IP addresses at which the service is available
+  ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+  ##
+  externalIPs: []
+
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  class:
+  annotations: {}
+  path: /
+  hosts:
+    - matrix-appservice-webhooks
+  tls: []
+  #  - secretName: matrix-appservice-webhooks-tls
+  #    hosts:
+  #      matrix-appservice-webhooks
+
+## Persist configuration to a persistent volume
+persistence:
+  ## database data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  data:
+    enabled: true
+    existingClaim:
+    storageClass:
+    accessMode: ReadWriteMany
+    size: 128Mi
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "256Mi"
+  limits:
+    cpu: "1"
+    memory: "512Mi"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
