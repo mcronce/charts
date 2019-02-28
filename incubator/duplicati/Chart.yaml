@@ -1,0 +1,15 @@
+apiVersion: v1
+appVersion: 2.0.4.15
+description: Free backup software to store encrypted backups online
+name: duplicati
+version: 0.0.1
+keywords:
+  - duplicati
+  - backup
+home: https://duplicati.com/
+sources:
+  - https://github.com/duplicati/duplicati
+  - https://github.com/helm/charts/tree/master/incubator/duplicati
+maintainers:
+  - name: mcronce
+    email: mike@quadra-tec.net

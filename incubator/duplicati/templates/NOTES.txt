@@ -1,0 +1,6 @@
+Duplicati has been installed. You can access the server from within the k8s cluster using:
+
+  {{ template "duplicati.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+WARNING:  Scaling the StatefulSet is untested.  Expect odd behavior if you do it.
+

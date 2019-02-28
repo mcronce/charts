@@ -1,0 +1,70 @@
+# Default values for duplicati.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # From repository https://github.com/duplicati/duplicati
+  repository: duplicati/duplicati
+  tag: 2.0.4.15_canary_2019-02-06
+  pullPolicy: IfNotPresent
+
+## Add additional labels to all resources
+extraLabels: {}
+
+service:
+  annotations: {}
+  type: ClusterIP
+  clusterIP: ""
+
+  port: 8200
+  ## List of IP addresses at which the service is available
+  ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+  ##
+  externalIPs: []
+
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+
+ingress:
+  enabled: false
+  class:
+  annotations: {}
+  path: /
+  hosts:
+    - duplicati
+  tls: []
+    # - secretName: duplicati-tls
+    #    hosts:
+    #      - duplicati
+
+## Persist configuration to a persistent volume
+persistence:
+  ## Config Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If unset, storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  config:
+    enabled: true
+    existingClaim:
+    storageClass:
+    accessMode: ReadWriteMany
+    size: 1Gi
+  ## A VolumeSpec for the root of the datastore you wish to back up
+  data: {}
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "256Mi"
+  limits:
+    cpu: "2"
+    memory: "512Mi"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
