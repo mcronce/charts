@@ -25,6 +25,10 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: data
+              subPath: data
+            - mountPath: /tmp
+              name: data
+              subPath: tmp
             - mountPath: /datastore
               name: datastore
           readinessProbe:
