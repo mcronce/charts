@@ -5,7 +5,7 @@
 image:
   # From repository https://github.com/duplicati/duplicati
   repository: duplicati/duplicati
-  tag: 2.0.4.18_canary_2019-05-12
+  tag: 2.0.4.22_canary_2019-06-30
   pullPolicy: IfNotPresent
 
 ## Add additional labels to all resources
